@@ -1,53 +1,54 @@
-name: Build APP
+: Build APP
 
-on:
-  push:
-    branches: [ "master", "old-android" ]
-  pull_request:
-    branches: [ "master" ]
+在::
+  推送::
+    分支: [ "master", "old-android" ]: [ "master", "old-android" ]
+  拉取请求::
+    分支: [ "master" ]: [ "master" ]
+  workflow_dispatch:   # 新增这一行，允许手动触发
 
-jobs:
-  build:
+工作::
+  构建::
 
-    runs-on: ubuntu-latest
+    运行于: ubuntu-latest: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-      - uses: sparkfabrik/android-build-action@v1.5.0
-        with:
-          project-path: .
-          output-path: app-debug.apk
-          fastlane-env: "debug"
-          ruby-version: "3.3.0"
-      - uses: actions/upload-artifact@v3
-        if: github.event_name == 'pull_request'
-        name: Upload app APK
-        with:
-          name: App bundle
-          path: app-debug.apk
-      # https://github.com/r0adkll/sign-android-release/issues/84#issuecomment-1889636075
-      - name: Setup build tool version variable
-        shell: bash
-        run: |
-          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+    步骤：:
+      - 使用: actions/checkout@v4uses: actions/checkout@v4
+        与：:
+          子模块：'递归': 'recursive'
+      - 使用: sparkfabrik/android-build-action@v1.5.0uses: sparkfabrik/android-build-action@v1.5.0
+        与：:
+          项目路径: .: .
+          输出路径: app-debug.apk: app-debug.apk
+          fastlane环境: "debug": "debug"
+          ruby-version: "3.3.0": "3.3.0"
+      - 使用: actions/upload-artifact@v3uses: actions/upload-artifact@v3
+        if: github.event_name == 'pull_request': github.event_name == 'pull_request'
+        名称：上传应用APK: Upload app APK
+        与：:
+          名称：应用包: App bundle
+          路径: app-debug.apk: app-debug.apk
+      # https://github.com/r0adkll/sign-android-release/issues/84#issuecomment-1889636075# https://github.com/r0adkll/sign-android-release/issues/84#issuecomment-1889636075
+name: 设置构建工具版本变量name: Setup build tool version variable
+        外壳: bash: bash
+        运行：|: |
+          构建工具版本=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
-          echo Last build tool version is: $BUILD_TOOL_VERSION
-      - uses: r0adkll/sign-android-release@v1
-        if: github.event_name != 'pull_request'
-        name: Sign app APK
-        id: sign_app
-        with:
-          releaseDirectory: .
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
-      - uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
-        name: Upload signed app APK
-        with:
-          name: Signed app bundle
-          path: ${{steps.sign_app.outputs.signedReleaseFile}}
+          回显最后的构建工具版本是：$BUILD_TOOL_VERSION
+      - 使用: r0adkll/sign-android-release@v1uses: r0adkll/sign-android-release@v1
+        如果：github事件名称不等于'pull_request': github.event_name != 'pull_request'
+        名称：签名应用 APK: Sign app APK
+        id: sign_app: sign_app
+        与：:
+          发布目录：.: .
+          签名密钥Base64: ${{ secrets.SIGNING_KEY }}: ${{ secrets.SIGNING_KEY }}
+          别名: ${{ secrets.ALIAS }}: ${{ secrets.ALIAS }}
+          密钥库密码: ${{ secrets.KEY_STORE_PASSWORD }}: ${{ secrets.KEY_STORE_PASSWORD }}
+        环境::
+          构建工具版本: ${{ env.BUILD_TOOL_VERSION }}: ${{ env.BUILD_TOOL_VERSION }}
+      - 使用: actions/upload-artifact@v4uses: actions/upload-artifact@v4
+        如果：github事件名称不等于'pull_request': github.event_name != 'pull_request'
+        名称：上传已签名的应用程序 APK: Upload signed app APK
+        与：:
+          名称：已签名的应用程序包: Signed app bundle
+          路径: ${{steps.sign_app.outputs.signedReleaseFile}}: ${{steps.sign_app.outputs.signedReleaseFile}}
